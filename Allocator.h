@@ -15,6 +15,9 @@
 #include <cstddef>   // ptrdiff_t, size_t
 #include <new>       // bad_alloc, new
 #include <stdexcept> // invalid_argument
+#include <cmath>      // absolute value
+
+
 
 // ---------
 // Allocator
@@ -22,6 +25,12 @@
 
 template <typename T, int N>
 class Allocator {
+
+    // #define SENTINEL_SIZE           sizeof(int)
+    // #define T_SIZE                  sizeof(T)
+    const int SENTINEL_SIZE =   sizeof(int);
+    const int T_SIZE =          sizeof(T);
+
     public:
         // --------
         // typedefs
@@ -71,6 +80,30 @@ class Allocator {
          */
         bool valid () const {
             // <your code>
+
+            //traverse sentinel nodes and check to make sure all have valid pairs
+            int current_idx = 0;
+            int current_node = view(0), pair_node, pair_idx;
+            while (current_idx != N) {
+                pair_idx = current_idx + abs(current_node) + SENTINEL_SIZE;
+                pair_node = view(pair_idx);
+                // std::cout << "current_idx is " << current_idx << std::endl;
+                // std::cout << "current_node is " << current_node << std::endl;
+                // std::cout << "pair_idx is " << pair_idx << std::endl;
+                // std::cout << "pair_node is " << pair_node << std::endl;
+                // std::cout << std::endl;
+                if (current_node != pair_node) {
+                    // std::cout << "current_idx is " << current_idx << std::endl;
+                    // std::cout << "current_node is " << current_node << std::endl;
+                    // std::cout << "pair_idx is " << pair_idx << std::endl;
+                    // std::cout << "pair_node is " << pair_node << std::endl;
+                    // std::cout << std::endl;
+                    return false;
+                }
+                current_idx += abs(current_node) + 2 * SENTINEL_SIZE;
+                current_node = view(current_idx);
+            }
+
             return true;}
 
         /**
@@ -90,10 +123,34 @@ class Allocator {
          * O(1) in space
          * O(1) in time
          * throw a bad_alloc exception, if N is less than sizeof(T) + (2 * sizeof(int))
-         */
+        */
+
         Allocator () {
             // <your code>
-            assert(valid());}
+            if (N < T_SIZE + (2 * SENTINEL_SIZE)) {
+                std::bad_alloc exception;
+                throw exception;
+            }
+
+            int block_size = N - (2 * SENTINEL_SIZE);
+            view(0) = block_size;
+            view(N - SENTINEL_SIZE) = block_size;
+
+            assert(valid());
+        }
+
+
+        Allocator (const Allocator& other) {
+
+        }
+
+        ~Allocator() {
+
+        }
+
+        Allocator& operator = (const Allocator&) {
+            
+        }
 
         // Default copy, destructor, and copy assignment
         // Allocator  (const Allocator&);
@@ -114,40 +171,60 @@ class Allocator {
          */
         pointer allocate (size_type n) {
             assert(n > 0);
-            int sent = sizeof(int);
-            int valid_size = sizeof(T) + (2 * sent);
-            int min_size = (n * sizeof(T)) + (2 * sent);
+            // std::cout << "value being allocated is " << n << std::endl;
+            int valid_size = T_SIZE + (2 * SENTINEL_SIZE);
+            int min_size = (n * T_SIZE) + (2 * SENTINEL_SIZE);
 
             int i = 0;
             int val;
             while (i < N) {
                 val = view(i);
 
+                // val is non-negative and big enough
                 if (val >= min_size) {
-                    int new_val, end;
+                    int new_val, new_start, new_end, old_val, old_start, old_end;
+
+                    new_start = i;
+
+                    // not enough space for another allocation, so
+                    // allocate the whole block
                     if (val < min_size + valid_size) {
-                        // allocate the whole block
-                        new_val = -val;
-                        end = i + val + sent;
+                        new_val = val;
+                        new_end = i + new_val + SENTINEL_SIZE;
                     }
                     else {
                         // only allocate as many bytes as requested
-                        new_val = n * sizeof(T);
-                        end = i + new_val + sent;
+                        new_val = n * T_SIZE;
+                        new_end = i + new_val + SENTINEL_SIZE;
+
+
+                        // create/update sentinel of remainder of block
+                        old_val = val - (2 * SENTINEL_SIZE) - new_val;
+                        old_start = new_end + SENTINEL_SIZE;
+                        old_end = old_start + old_val + SENTINEL_SIZE;
+                        view(old_start) = old_val;
+                        view(old_end) = old_val;
                     }
 
-                    a[i] = new_val;
-                    a[end] = new_val;
+                    // std::cout << "new value is " << -new_val << std::endl;
+                    // std::cout << std::endl;
+                    view(new_start) = -new_val;
+                    view(new_end) = -new_val;
+
                     assert(valid());
-                    return reinterpret_cast<T*>(&a[i + sent]);
+                    return reinterpret_cast<T*>(&a[i + SENTINEL_SIZE]);
                 }
 
-                // no space, increment i to next block
-                i += val + (2 * sent);
+                // either block is already occupied, or no space
+                // increment i to next block
+                i += abs(val) + (2 * SENTINEL_SIZE);
             }
+            assert(valid());
 
             // not enough space
             // TODO: or throw bad_alloc?
+            // std::bad_alloc exception;
+            // throw exception;
             return 0;}
 
         // ---------

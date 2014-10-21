@@ -83,3 +83,38 @@ TYPED_TEST(TestAllocator, Ten) {
             --e;
             x.destroy(e);}
         x.deallocate(b, s);}}
+
+
+TYPED_TEST(TestAllocator, TEST_TEST) {
+    typedef typename TestFixture::allocator_type  allocator_type;
+    typedef typename TestFixture::value_type      value_type;
+    typedef typename TestFixture::difference_type difference_type;
+    typedef typename TestFixture::pointer         pointer;
+
+    allocator_type x;
+    const difference_type s = 1;
+    const value_type      v = 2;
+    const pointer         p = x.allocate(s);
+    if (p != 0) {
+        x.construct(p, v);
+        ASSERT_EQ(v, *p);
+        x.destroy(p);
+        x.deallocate(p, s);}
+
+    const difference_type s2 = 10;
+    const pointer p2 = x.allocate(s2);
+    if (p2 != 0) {
+        x.construct(p2, v);
+        ASSERT_EQ(v, *p2);
+        x.destroy(p2);
+        x.deallocate(p2, s2);
+    }
+
+    //attempt to allocate too much space
+    //allocate should return 0?
+    
+    // const difference_type s3 = 200;
+    // const pointer p3 = x.allocate(s3);
+    // ASSERT_EQ(0, p3);
+
+}
