@@ -298,7 +298,7 @@ class Allocator {
                 *(sent_1) = -*(sent_1);
                 *(sent_2) = -*(sent_2);
 
-                std::cout << "new values are " << *sent_1 << " and " << *sent_2 << std::endl;
+                // std::cout << "new values are " << *sent_1 << " and " << *sent_2 << std::endl;
 
                 assert(valid());
             }
@@ -310,18 +310,24 @@ class Allocator {
                 std::cout << "value of right is " << right_val << std::endl;
 
                 if (right_val > 0) {
-                    int* new_end = right_sent + right_val + SENTINEL_SIZE;
+                    // int* new_end = right_sent + right_val + SENTINEL_SIZE;
+                    int* new_end = reinterpret_cast<int*>(c2 + right_val + 2*SENTINEL_SIZE);
                     int new_val = -(*sent_1) + right_val + 2 * SENTINEL_SIZE;
 
-                    // *new_end = new_val; //this seg faults
+                    *new_end = new_val; //this seg faults if new_end is computed AFTER casting to int*
+                    *sent_1 = new_val;
 
                     std::cout << "new val is " << new_val << std::endl;
 
                     // int end_idx = (reinterpret_cast<intptr_t>(new_end) - reinterpret_cast<intptr_t>(&a[0])) / 4;
                     // std::cout << "end index is " << end_idx << std::endl;
+                    assert(valid());
                 }
-                else {
+                else {      //no coalescing required
+                    *(sent_1) = -*(sent_1);
+                    *(sent_2) = -*(sent_2);
 
+                    assert(valid());
                 }
             }
             //coalesce block to the left
