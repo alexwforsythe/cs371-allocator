@@ -214,7 +214,7 @@ class Allocator {
 
                     // std::cout << "new value is " << -new_val << std::endl;
                     // std::cout << "new start and end are " << new_start << " and " << new_end << std::endl;
-                    std::cout << std::endl;
+                    // std::cout << std::endl;
                     view(new_start) = -new_val;
                     view(new_end) = -new_val;
 
@@ -268,11 +268,11 @@ class Allocator {
 
             char* c1 = c - SENTINEL_SIZE;
             int* sent_1 = reinterpret_cast<int*>(c1);
-            std::cout << "sent_1: " << *sent_1 << std::endl;
+            // std::cout << "sent_1: " << *sent_1 << std::endl;
 
             char* c2 = c + abs(*(sent_1));
             int* sent_2 = reinterpret_cast<int*>(c2);
-            std::cout << "sent_2: " << *sent_2 << std::endl;
+            // std::cout << "sent_2: " << *sent_2 << std::endl;
 
             //make sure we have the right sentinel nodes
             assert(*sent_1 == *sent_2);
@@ -280,7 +280,7 @@ class Allocator {
             //check left sentinel (if applicable)
             char* beginning = &a[0];
             if (c1 == beginning) {
-                std::cout << "left is beginning of heap " << std::endl;
+                // std::cout << "left is beginning of heap " << std::endl;
                 block_begins_heap = true;
             }
             // std::cout << "beginning of heap: " << *reinterpret_cast<int*>(beginning) << std::endl;
@@ -288,7 +288,7 @@ class Allocator {
 
             char* end = &a[N - SENTINEL_SIZE];
             if (c2 == end) {
-                std::cout << "right is end of heap " << std::endl;
+                // std::cout << "right is end of heap " << std::endl;
                 block_ends_heap = true;
             }
             // std::cout << "end of heap: " << *reinterpret_cast<int*>(end) << std::endl;
@@ -304,10 +304,11 @@ class Allocator {
             }
             //coalesce block to the right
             else if (block_begins_heap && !block_ends_heap) {
+                // std::cout << "coalescing block to right" << std::endl;
                 int* right_sent = reinterpret_cast<int*>(c2 + SENTINEL_SIZE);
                 int right_val = *right_sent;
 
-                std::cout << "value of right is " << right_val << std::endl;
+                // std::cout << "value of right is " << right_val << std::endl;
 
                 if (right_val > 0) {
                     // int* new_end = right_sent + right_val + SENTINEL_SIZE;
@@ -317,7 +318,7 @@ class Allocator {
                     *new_end = new_val; //this seg faults if new_end is computed AFTER casting to int*
                     *sent_1 = new_val;
 
-                    std::cout << "new val is " << new_val << std::endl;
+                    // std::cout << "new val is " << new_val << std::endl;
 
                     // int end_idx = (reinterpret_cast<intptr_t>(new_end) - reinterpret_cast<intptr_t>(&a[0])) / 4;
                     // std::cout << "end index is " << end_idx << std::endl;
@@ -326,46 +327,69 @@ class Allocator {
                 else {      //no coalescing required
                     *(sent_1) = -*(sent_1);
                     *(sent_2) = -*(sent_2);
-
-                    assert(valid());
                 }
+                assert(valid());
             }
             //coalesce block to the left
             else if (!block_begins_heap && block_ends_heap) {
+                // std::cout << "coalescing block to left" << std::endl;
+                int* left_sent = reinterpret_cast<int*>(c1 - SENTINEL_SIZE);
+                int left_val = *left_sent;
 
+                if (left_val > 0) {
+                    int* new_start = reinterpret_cast<int*>(c1 - 2*SENTINEL_SIZE - left_val);
+                    int new_val = -(*sent_1) + left_val + 2*SENTINEL_SIZE;
+
+                    *new_start = new_val;
+                    *sent_2 = new_val;
+                }
+                else {
+                    *(sent_1) = -*(sent_1);
+                    *(sent_2) = -*(sent_2);
+                }
+                assert(valid());
             }
             //coalesce both blocks
             else {
-                // char* left_c = c - 2*SENTINEL_SIZE;
-                // int* left_sent = reinterpret_cast<int*>(left_c);
-                // int left_val = *left_sent;
+                // std::cout << "coalescing both blocks" << std::endl;
 
-                // char* right_c = c2 + SENTINEL_SIZE;
-                // int* right_sent = reinterpret_cast<int*>(right_c);
-                // int right_val = *right_sent;
+                int* right_sent = reinterpret_cast<int*>(c2 + SENTINEL_SIZE);
+                int right_val = *right_sent;
 
-                // // int new_val = sent_1;
+                int* left_sent = reinterpret_cast<int*>(c1 - SENTINEL_SIZE);
+                int left_val = *left_sent;
 
-                // if (left_val > 0 && right_val > 0) {
-                //     int* new_start = left_sent - left_val - SENTINEL_SIZE;
-                //     int* new_end = right_sent + right_val + SENTINEL_SIZE;
-                //     // int start_idx = new_start - beginning;
-                //     std::cout << "index of new start is " << start_idx << std::endl;
-                // }
-                // else if (left_val > 0) {
+                if (left_val > 0 && right_val > 0) {
+                    int* new_start = reinterpret_cast<int*>(c1 - 2*SENTINEL_SIZE - left_val);
+                    int* new_end = reinterpret_cast<int*>(c2 + right_val + 2*SENTINEL_SIZE);
 
-                // }
-                // else if (right_val > 0) {
+                    int new_val = -(*sent_1) + left_val + right_val + 2*SENTINEL_SIZE;
+                    
+                    *new_start = new_val;
+                    *new_end = new_val;
+                }
+                else if (left_val > 0) {
+                    int* new_start = reinterpret_cast<int*>(c1 - 2*SENTINEL_SIZE - left_val);
+                    int new_val = -(*sent_1) + left_val + 2*SENTINEL_SIZE;
 
-                // }
-                // else {
-                //     //no coalescing
-                // }
+                    *new_start = new_val;
+                    *sent_2 = new_val;
+                }
+                else if (right_val > 0) {
+                    int* new_end = reinterpret_cast<int*>(c2 + right_val + 2*SENTINEL_SIZE);
+                    int new_val = -(*sent_1) + right_val + 2 * SENTINEL_SIZE;
+
+                    *new_end = new_val;
+                    *sent_1 = new_val;
+                }
+                else {
+                    //no coalescing
+                    *(sent_1) = -*(sent_1);
+                    *(sent_2) = -*(sent_2);
+                }
+                assert(valid());
             }
-
-
-            std::cout << std::endl;
-
+            // std::cout << std::endl;
             assert(valid());
         }
 
