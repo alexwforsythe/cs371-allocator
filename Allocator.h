@@ -140,16 +140,21 @@ class Allocator {
         }
 
 
-        Allocator (const Allocator& other) {
-
+        Allocator (const Allocator& other) :
+            a (other.a)
+        { 
+            assert(valid());
         }
 
-        ~Allocator() {
-
+        ~Allocator()
+        { 
+            // delete [] a;
         }
 
-        Allocator& operator = (const Allocator&) {
-            
+        Allocator& operator = (const Allocator& other) {
+            a = other.a;
+            assert(valid());
+            return *this;
         }
 
         // Default copy, destructor, and copy assignment
@@ -172,6 +177,7 @@ class Allocator {
         pointer allocate (size_type n) {
             assert(n > 0);
             // std::cout << "value being allocated is " << n << std::endl;
+            // std::cout << "number of bytes allocated is " << n * T_SIZE << std::endl;
             int valid_size = T_SIZE + (2 * SENTINEL_SIZE);
             int min_size = (n * T_SIZE) + (2 * SENTINEL_SIZE);
 
@@ -207,12 +213,16 @@ class Allocator {
                     }
 
                     // std::cout << "new value is " << -new_val << std::endl;
-                    // std::cout << std::endl;
+                    // std::cout << "new start and end are " << new_start << " and " << new_end << std::endl;
+                    std::cout << std::endl;
                     view(new_start) = -new_val;
                     view(new_end) = -new_val;
 
                     assert(valid());
-                    return reinterpret_cast<T*>(&a[i + SENTINEL_SIZE]);
+                    // std::cout << "returning pointer " << reinterpret_cast<T*>(&a[i + SENTINEL_SIZE]) << std::endl;
+                    // std::cout << "which is really " << i + SENTINEL_SIZE << std::endl;
+                    // std::cout << "returning pointer to " << view(new_start + SENTINEL_SIZE) << std::endl;
+                    return reinterpret_cast<T*>(&a[new_start + SENTINEL_SIZE]);
                 }
 
                 // either block is already occupied, or no space
@@ -250,9 +260,108 @@ class Allocator {
          * after deallocation adjacent free blocks must be coalesced
          * <your documentation>
          */
-        void deallocate (pointer p, size_type) {
+        void deallocate (pointer p, size_type s) {
             // <your code>
-            assert(valid());}
+            bool block_begins_heap = false, block_ends_heap = false;
+
+            char* c = reinterpret_cast<char*>(p); //char* equivalent of p
+
+            char* c1 = c - SENTINEL_SIZE;
+            int* sent_1 = reinterpret_cast<int*>(c1);
+            std::cout << "sent_1: " << *sent_1 << std::endl;
+
+            char* c2 = c + abs(*(sent_1));
+            int* sent_2 = reinterpret_cast<int*>(c2);
+            std::cout << "sent_2: " << *sent_2 << std::endl;
+
+            //make sure we have the right sentinel nodes
+            assert(*sent_1 == *sent_2);
+
+            //check left sentinel (if applicable)
+            char* beginning = &a[0];
+            if (c1 == beginning) {
+                std::cout << "left is beginning of heap " << std::endl;
+                block_begins_heap = true;
+            }
+            // std::cout << "beginning of heap: " << *reinterpret_cast<int*>(beginning) << std::endl;
+
+
+            char* end = &a[N - SENTINEL_SIZE];
+            if (c2 == end) {
+                std::cout << "right is end of heap " << std::endl;
+                block_ends_heap = true;
+            }
+            // std::cout << "end of heap: " << *reinterpret_cast<int*>(end) << std::endl;
+
+            //no coaslescing necessary
+            if (block_begins_heap && block_ends_heap) {
+                *(sent_1) = -*(sent_1);
+                *(sent_2) = -*(sent_2);
+
+                std::cout << "new values are " << *sent_1 << " and " << *sent_2 << std::endl;
+
+                assert(valid());
+            }
+            //coalesce block to the right
+            else if (block_begins_heap && !block_ends_heap) {
+                int* right_sent = reinterpret_cast<int*>(c2 + SENTINEL_SIZE);
+                int right_val = *right_sent;
+
+                std::cout << "value of right is " << right_val << std::endl;
+
+                if (right_val > 0) {
+                    int* new_end = right_sent + right_val + SENTINEL_SIZE;
+                    int new_val = -(*sent_1) + right_val + 2 * SENTINEL_SIZE;
+
+                    // *new_end = new_val; //this seg faults
+
+                    std::cout << "new val is " << new_val << std::endl;
+
+                    // int end_idx = (reinterpret_cast<intptr_t>(new_end) - reinterpret_cast<intptr_t>(&a[0])) / 4;
+                    // std::cout << "end index is " << end_idx << std::endl;
+                }
+                else {
+
+                }
+            }
+            //coalesce block to the left
+            else if (!block_begins_heap && block_ends_heap) {
+
+            }
+            //coalesce both blocks
+            else {
+                // char* left_c = c - 2*SENTINEL_SIZE;
+                // int* left_sent = reinterpret_cast<int*>(left_c);
+                // int left_val = *left_sent;
+
+                // char* right_c = c2 + SENTINEL_SIZE;
+                // int* right_sent = reinterpret_cast<int*>(right_c);
+                // int right_val = *right_sent;
+
+                // // int new_val = sent_1;
+
+                // if (left_val > 0 && right_val > 0) {
+                //     int* new_start = left_sent - left_val - SENTINEL_SIZE;
+                //     int* new_end = right_sent + right_val + SENTINEL_SIZE;
+                //     // int start_idx = new_start - beginning;
+                //     std::cout << "index of new start is " << start_idx << std::endl;
+                // }
+                // else if (left_val > 0) {
+
+                // }
+                // else if (right_val > 0) {
+
+                // }
+                // else {
+                //     //no coalescing
+                // }
+            }
+
+
+            std::cout << std::endl;
+
+            assert(valid());
+        }
 
         // -------
         // destroy
