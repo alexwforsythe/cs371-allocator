@@ -355,7 +355,7 @@ TEST(AllocExtra, Double){
     ASSERT_TRUE(err);
 }
 
-// Section 6: deallocate() tests
+//Section 6: deallocate() tests
 
 //6.a Deallocate working properly
 
@@ -488,7 +488,7 @@ TEST(DeallocateBack, Char2){
         Allocator<char, 100>::pointer p = al.allocate(56);
         Allocator<char, 100>::pointer p2 = al.allocate(10);
         Allocator<char, 100>::pointer p3 = al.allocate(10);
-        al.deallocate(p2, 10);
+        al.deallocate(p2, 10);  
         al.deallocate(p3, 10);
     }catch(...){
         ASSERT_TRUE(false);
