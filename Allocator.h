@@ -15,7 +15,7 @@
 #include <cstddef>   // ptrdiff_t, size_t
 #include <new>       // bad_alloc, new
 #include <stdexcept> // invalid_argument
-#include <cmath>      // absolute value
+#include <cmath>     // absolute value
 
 
 
@@ -26,8 +26,6 @@
 template <typename T, int N>
 class Allocator {
 
-    // #define SENTINEL_SIZE           sizeof(int)
-    // #define T_SIZE                  sizeof(T)
     const int SENTINEL_SIZE =   sizeof(int);
     const int T_SIZE =          sizeof(T);
 
@@ -79,9 +77,7 @@ class Allocator {
          * <your documentation>
          */
         bool valid () const {
-            // <your code>
-
-            //traverse sentinel nodes and check to make sure all have valid pairs
+            // traverse sentinel nodes and check to make sure all have valid pairs
             int current_idx = 0;
             int current_node = view(0), pair_node, pair_idx;
             while (current_idx != N) {
@@ -126,10 +122,8 @@ class Allocator {
         */
 
         Allocator () {
-            // <your code>
             if (N < T_SIZE + (2 * SENTINEL_SIZE)) {
-                std::bad_alloc exception;
-                throw exception;
+                throw std::bad_alloc();
             }
 
             int block_size = N - (2 * SENTINEL_SIZE);
@@ -175,11 +169,15 @@ class Allocator {
          * return 0, if allocation fails
          */
         pointer allocate (size_type n) {
-            assert(n > 0);
             // std::cout << "value being allocated is " << n << std::endl;
             // std::cout << "number of bytes allocated is " << n * T_SIZE << std::endl;
             int valid_size = T_SIZE + (2 * SENTINEL_SIZE);
             int min_size = (n * T_SIZE) + (2 * SENTINEL_SIZE);
+
+            // check precondition
+            if (n <= 0 || n > N || min_size > N) {
+                throw std::bad_alloc();
+            }
 
             int i = 0;
             int val;
@@ -232,9 +230,7 @@ class Allocator {
             assert(valid());
 
             // not enough space
-            // TODO: or throw bad_alloc?
-            // std::bad_alloc exception;
-            // throw exception;
+            // throw std::bad_alloc();
             return 0;}
 
         // ---------
@@ -261,7 +257,11 @@ class Allocator {
          * <your documentation>
          */
         void deallocate (pointer p, size_type s) {
-            // <your code>
+            // check precondition
+            if (p <= 0) {
+                throw std::invalid_argument("");
+            }
+
             bool block_begins_heap = false, block_ends_heap = false;
 
             char* c = reinterpret_cast<char*>(p); //char* equivalent of p
@@ -404,6 +404,7 @@ class Allocator {
          * <your documentation>
          */
         void destroy (pointer p) {
+            // TODO: check precondition
             p->~T();               // this is correct
             assert(valid());}
 
