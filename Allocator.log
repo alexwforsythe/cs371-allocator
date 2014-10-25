@@ -1,0 +1,83 @@
+commit 05a789a4f3a58c583d65b5f44fb955eeccae0f7f
+Author: Alex Forsythe <alexwforsythe@gmail.com>
+Date:   Fri Oct 24 21:55:40 2014 -0500
+
+    ran doxygen: fixes #10
+
+commit 6cf36549fe9290856429e23312cfc09c9112cc76
+Author: Alex Forsythe <alexwforsythe@gmail.com>
+Date:   Fri Oct 24 21:50:57 2014 -0500
+
+    fixed compilation warnings: fixes #18
+
+commit 0f996162af46debff565278994af7dba6476b1ce
+Author: Alex Forsythe <alexwforsythe@gmail.com>
+Date:   Fri Oct 24 21:41:10 2014 -0500
+
+    added documentation and cleaned up code: fixes #13, fixes #14
+
+commit ec434bfe337c177b0b04f3464034100d4670020c
+Author: Alex Forsythe <alexwforsythe@gmail.com>
+Date:   Fri Oct 24 21:30:03 2014 -0500
+
+    added unit tests: fixes #6
+
+commit 03b66fab84a1c2230df8bb5ceda50ae9bc1c9c77
+Author: Alex Forsythe <alexwforsythe@gmail.com>
+Date:   Fri Oct 24 20:50:07 2014 -0500
+
+    reverting to original tests
+
+commit e17489a82b8d641cd8439561f8f2755c7b1de409
+Author: nkubala <kubala.nick@gmail.com>
+Date:   Fri Oct 24 17:19:51 2014 -0500
+
+    rewrote deallocator, all tests pass! only documentation left
+
+commit 82a8d46e14da284744cfc1196d3a5dd02eebc364
+Author: Alex Forsythe <alexwforsythe@gmail.com>
+Date:   Thu Oct 23 21:02:45 2014 -0500
+
+    throwing exceptions from allocator functions, copied test code from public repo temporarily: fixes #3, fixes #5, fixes #7, fixes #17
+
+commit 3c81bf86604a764ac740e07e8cca5af841a20b16
+Author: nkubala <kubala.nick@gmail.com>
+Date:   Wed Oct 22 15:19:40 2014 -0500
+
+    finished deallocate. fixes #2. fixes #15.
+
+commit 05f16aa2393d36791593601648f8ceeeee1bdb75
+Author: nkubala <kubala.nick@gmail.com>
+Date:   Tue Oct 21 21:10:09 2014 -0500
+
+    coalescing almost finished, just need to copy code to adapt coalescing left side/both sides....no more segfaults though yeahhhh
+
+commit a72687d19f6b9ec69374a67d70826435a83681de
+Author: nkubala <kubala.nick@gmail.com>
+Date:   Tue Oct 21 20:35:18 2014 -0500
+
+    deallocate almost finished: need to figure out how to assign values to new sentinels (how to get index into array for view())
+
+commit c6ebc6ad100bd85e701005d7156edf3813cbe565
+Author: nkubala <kubala.nick@gmail.com>
+Date:   Mon Oct 20 21:32:20 2014 -0500
+
+    fixed implementation of allocate() to update all sentinel nodes correctly. fixes #1
+
+commit 6518295391d310fca893c4eb7109b91e9fce7f9e
+Author: Alex Forsythe <alexwforsythe@gmail.com>
+Date:   Mon Oct 20 14:39:10 2014 -0500
+
+    Implemented allocate function (not tested)
+
+commit 029de1c106cea38f43aa9dbd82eabfcf3b771d92
+Author: nkubala <kubala.nick@gmail.com>
+Date:   Sun Oct 19 12:28:12 2014 -0500
+
+    initial commit
+
+commit d2d1247f677357d41a8995289790e148075aaf35
+Author: Nick Kubala <kubala.nick@gmail.com>
+Date:   Sun Oct 19 12:22:12 2014 -0500
+
+    Initial commit
