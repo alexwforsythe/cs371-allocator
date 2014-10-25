@@ -163,8 +163,7 @@ class Allocator {
                 int& val = view(i);
 
                 // val is non-negative and big enough
-                if (val > 0 && val >= n) {
-                    
+                if (val > 0 && val >= (signed) n) {
                     int new_val, new_start, new_end, old_val, old_start, old_end;
 
                     new_start = i;
@@ -206,6 +205,8 @@ class Allocator {
             // not enough space
             if (i >= N)
                 throw std::bad_alloc();
+
+            return 0;
         }
 
         // ---------
