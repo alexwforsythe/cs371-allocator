@@ -17,8 +17,6 @@
 #include <stdexcept> // invalid_argument
 #include <cmath>     // absolute value
 
-
-
 // ---------
 // Allocator
 // ---------
@@ -75,28 +73,16 @@ class Allocator {
         /**
          * O(1) in space
          * O(n) in time
-         * <your documentation>
+         * Traverse sentinel nodes and check to make sure all have valid pairs
          */
         bool valid () const {
-            // traverse sentinel nodes and check to make sure all have valid pairs
             int current_idx = 0;
             int current_node = view(0), pair_node, pair_idx;
             while (current_idx != N) {
                 pair_idx = current_idx + abs(current_node) + SENTINEL_SIZE;
                 pair_node = view(pair_idx);
-                // std::cout << "current_idx is " << current_idx << std::endl;
-                // std::cout << "current_node is " << current_node << std::endl;
-                // std::cout << "pair_idx is " << pair_idx << std::endl;
-                // std::cout << "pair_node is " << pair_node << std::endl;
-                // std::cout << std::endl;
-                if (current_node != pair_node) {
-                    std::cout << "current_idx is " << current_idx << std::endl;
-                    std::cout << "current_node is " << current_node << std::endl;
-                    std::cout << "pair_idx is " << pair_idx << std::endl;
-                    std::cout << "pair_node is " << pair_node << std::endl;
-                    std::cout << std::endl;
+                if (current_node != pair_node)
                     return false;
-                }
                 current_idx += abs(current_node) + 2 * SENTINEL_SIZE;
                 current_node = view(current_idx);
             }
@@ -106,7 +92,7 @@ class Allocator {
         /**
          * O(1) in space
          * O(1) in time
-         * <your documentation>
+         * Returns the amount of free/used bytes at the given sentinel.
          */
         int& view (int i) {
             return *reinterpret_cast<int*>(&a[i]);}
@@ -119,9 +105,8 @@ class Allocator {
         /**
          * O(1) in space
          * O(1) in time
-         * throw a bad_alloc exception, if N is less than sizeof(T) + (2 * sizeof(int))
-        */
-
+         * Throw a bad_alloc exception, if N is less than sizeof(T) + (2 * sizeof(int))
+         */
         Allocator () {
             if (N < T_SIZE + (2 * SENTINEL_SIZE)) {
                 throw std::bad_alloc();
@@ -211,6 +196,7 @@ class Allocator {
 
                     return reinterpret_cast<T*>(&a[new_start + SENTINEL_SIZE]);   
                 }
+
                 // either block is already occupied, or no space
                 // increment i to next block
                 i += abs(val) + (2 * SENTINEL_SIZE);
@@ -218,11 +204,9 @@ class Allocator {
             assert(valid());
 
             // not enough space
-            // throw std::bad_alloc();
             if (i >= N)
                 throw std::bad_alloc();
         }
-
 
         // ---------
         // construct
@@ -231,7 +215,7 @@ class Allocator {
         /**
          * O(1) in space
          * O(1) in time
-         * <your documentation>
+         * calls the 
          */
         void construct (pointer p, const_reference v) {
             new (p) T(v);                               // this is correct and exempt
@@ -241,182 +225,14 @@ class Allocator {
         // deallocate
         // ----------
 
-
         /**
          * O(1) in space
          * O(1) in time
          * after deallocation adjacent free blocks must be coalesced
-         * <your documentation>
+         * Releases a block of storage previously allocated with member allocate
+         * and not yet released.
          */
-
-
-        /* 
-            THIS IS THE OLD DEALLOCATE
-            IT'S TRASH.
-            REWROTE IT AND NOW IT WORKS.
-
-        void deallocate (pointer p, size_type s) {
-            // check precondition
-            if (p <= 0) {
-                throw std::invalid_argument("");
-            }
-
-            // std::cout << "pointer being deallocated is " << p << std::endl;
-
-            bool block_begins_heap = false, block_ends_heap = false;
-
-            char* c = reinterpret_cast<char*>(p); //char* equivalent of p
-
-            char* c1 = c - SENTINEL_SIZE;
-            int* sent_1 = reinterpret_cast<int*>(c1);
-            // std::cout << "sent_1: " << *sent_1 << std::endl;
-
-            char* c2 = c + abs(*(sent_1));
-            int* sent_2 = reinterpret_cast<int*>(c2);
-            // std::cout << "sent_2: " << *sent_2 << std::endl;
-
-            //make sure we have the right sentinel nodes
-            assert(*sent_1 == *sent_2);
-
-            //check left sentinel (if applicable)
-            char* beginning = &a[0];
-            if (c1 == beginning) {
-                std::cout << "left is beginning of heap " << std::endl;
-                block_begins_heap = true;
-            }
-            // std::cout << "beginning of heap: " << *reinterpret_cast<int*>(beginning) << std::endl;
-
-
-            char* end = &a[N - SENTINEL_SIZE];
-            if (c2 == end) {
-                std::cout << "right is end of heap " << std::endl;
-                block_ends_heap = true;
-            }
-            // std::cout << "end of heap: " << *reinterpret_cast<int*>(end) << std::endl;
-
-            //no coaslescing necessary
-            if (block_begins_heap && block_ends_heap) {
-                *(sent_1) = -*(sent_1);
-                *(sent_2) = -*(sent_2);
-
-                // std::cout << "new values are " << *sent_1 << " and " << *sent_2 << std::endl;
-
-                assert(valid());
-            }
-            //coalesce block to the right
-            else if (block_begins_heap && !block_ends_heap) {
-                // std::cout << "coalescing block to right" << std::endl;
-                int* right_sent = reinterpret_cast<int*>(c2 + SENTINEL_SIZE);
-                int right_val = *right_sent;
-
-                // std::cout << "value of right is " << right_val << std::endl;
-
-                if (right_val > 0) {
-                    // int* new_end = right_sent + right_val + SENTINEL_SIZE;
-                    int* new_end = reinterpret_cast<int*>(c2 + right_val + 2*SENTINEL_SIZE);
-                    int new_val = -(*sent_1) + right_val + 2 * SENTINEL_SIZE;
-
-                    *new_end = new_val; //this seg faults if new_end is computed AFTER casting to int*
-                    *sent_1 = new_val;
-
-                    // std::cout << "new val is " << new_val << std::endl;
-
-                    // int end_idx = (reinterpret_cast<intptr_t>(new_end) - reinterpret_cast<intptr_t>(&a[0])) / 4;
-                    // std::cout << "end index is " << end_idx << std::endl;
-                    assert(valid());
-                }
-                else {      //no coalescing required
-                    *(sent_1) = -*(sent_1);
-                    *(sent_2) = -*(sent_2);
-                }
-                assert(valid());
-            }
-            //coalesce block to the left
-            else if (!block_begins_heap && block_ends_heap) {
-                // std::cout << "coalescing block to left" << std::endl;
-                int* left_sent = reinterpret_cast<int*>(c1 - SENTINEL_SIZE);
-                int left_val = *left_sent;
-
-                if (left_val > 0) {
-                    int* new_start = reinterpret_cast<int*>(c1 - 2*SENTINEL_SIZE - left_val);
-                    int new_val = -(*sent_1) + left_val + 2*SENTINEL_SIZE;
-
-                    *new_start = new_val;
-                    *sent_2 = new_val;
-                }
-                else {
-                    *(sent_1) = -*(sent_1);
-                    *(sent_2) = -*(sent_2);
-                }
-                assert(valid());
-            }
-            //coalesce both blocks
-            else {
-                std::cout << "coalescing both blocks" << std::endl;
-
-                int* right_sent = reinterpret_cast<int*>(c2 + SENTINEL_SIZE);
-                int right_val = *right_sent;
-
-                int* left_sent = reinterpret_cast<int*>(c1 - SENTINEL_SIZE);
-                int left_val = *left_sent;
-
-                if (left_val > 0 && right_val > 0) {
-                    std::cout << "value of left_val is " << left_val << std::endl;
-                    std::cout << "value of right_val is " << right_val << std::endl;
-
-                    // char* new_start_c = c1 - 2*SENTINEL_SIZE - left_val;
-                    // char* new_end_c = c2 + right_val + 2*SENTINEL_SIZE;
-
-                    // int* new_start = reinterpret_cast<int*>(new_start_c);
-                    // int* new_end = reinterpret_cast<int*>(new_end_c);
-
-                    int* new_start = reinterpret_cast<int*>(c1 - 2*SENTINEL_SIZE - left_val);
-                    int* new_end = reinterpret_cast<int*>(c2 + right_val + 2*SENTINEL_SIZE);
-
-                    // int* new_end = reinterpret_cast<int*>(c2 + right_val + SENTINEL_SIZE);
-
-
-                    int new_val = -(*sent_1) + left_val + right_val + 2*SENTINEL_SIZE;
-                    
-                    *new_start = new_val;
-                    *new_end = new_val;
-                    std::cout << "pointer difference is " << new_end - new_start << std::endl;
-                    std::cout << "new values are " << new_val << std::endl;
-
-                }
-                else if (left_val > 0) {
-                    int* new_start = reinterpret_cast<int*>(c1 - 2*SENTINEL_SIZE - left_val);
-                    int new_val = -(*sent_1) + left_val + 2*SENTINEL_SIZE;
-
-                    *new_start = new_val;
-                    *sent_2 = new_val;
-                    // std::cout << "new values are " << new_val << std::endl;
-
-                }
-                else if (right_val > 0) {
-                    int* new_end = reinterpret_cast<int*>(c2 + right_val + 2*SENTINEL_SIZE);
-                    int new_val = -(*sent_1) + right_val + 2 * SENTINEL_SIZE;
-
-                    *new_end = new_val;
-                    *sent_1 = new_val;
-                    // std::cout << "new values are " << new_val << std::endl;
-                }
-                else {
-                    //no coalescing
-                    *(sent_1) = -*(sent_1);
-                    *(sent_2) = -*(sent_2);
-                    // std::cout << "new values are " << -*(sent_1) << " and " << -*(sent_2) << std::endl;
-                }
-                // assert(valid());
-            }
-            std::cout << std::endl;
-            assert(valid());
-        }
-        */
-         
-
         void deallocate (pointer p, size_type) {
-
             //get sentinel of block to be freed
             char* block_start = reinterpret_cast<char*>(p);
 
@@ -424,9 +240,8 @@ class Allocator {
             int left_sent_idx = std::distance(a, block_start - SENTINEL_SIZE);
             int* left_sent = &view(left_sent_idx);
 
-            //if block is already free, throw error?
+            //if block is already free, throw error
             if (*left_sent > 0) {
-                //throw error here
                 throw std::invalid_argument("can't deallocate a block that's already free");
             }
             
@@ -482,7 +297,6 @@ class Allocator {
             assert(valid());
         }
 
-
         // -------
         // destroy
         // -------
@@ -491,17 +305,16 @@ class Allocator {
          * O(1) in space
          * O(1) in time
          * throw an invalid_argument exception, if pointer is invalid
-         * <your documentation>
+         * Destroys in-place the object pointed by p.
          */
         void destroy (pointer p) {
-            // TODO: check precondition
             p->~T();               // this is correct
             assert(valid());}
 
         /**
          * O(1) in space
          * O(1) in time
-         * <your documentation>
+         * Returns the amount of free/used bytes at the given sentinel.
          */
         const int& view (int i) const {
             return *reinterpret_cast<const int*>(&a[i]);}};
